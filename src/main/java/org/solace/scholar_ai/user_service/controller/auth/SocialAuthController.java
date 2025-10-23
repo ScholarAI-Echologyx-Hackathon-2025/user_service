@@ -33,96 +33,10 @@ public class SocialAuthController {
     private static final Logger logger = LoggerFactory.getLogger(SocialAuthController.class);
     private final SocialAuthService socialAuthService;
 
-    @Operation(
-            summary = "Google OAuth Login",
-            description =
-                    """
-                        Authenticate user using Google OAuth ID token.
-
-                        **How it works:**
-                        1. Client obtains Google ID token from Google OAuth flow
-                        2. Sends ID token to this endpoint
-                        3. Server validates the ID token with Google
-                        4. Creates or updates user account
-                        5. Returns JWT tokens for API access
-
-                        **For Swagger Testing:**
-                        1. Use this endpoint with a valid Google ID token
-                        2. Copy the `accessToken` from the response
-                        3. Click the 🔒 **Authorize** button at the top
-                        4. Enter: `Bearer <your-access-token>`
-                        """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "Google login successful",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Google Login Success",
-                                                        value =
-                                                                """
-                                        {
-                                          "statusCode": 200,
-                                          "message": "Google login successful",
-                                          "success": true,
-                                          "data": {
-                                            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                                            "tokenType": "Bearer",
-                                            "expiresIn": 900
-                                          }
-                                        }
-                                        """))),
-                @ApiResponse(
-                        responseCode = "400",
-                        description = "ID token is missing",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Missing ID Token",
-                                                        value =
-                                                                """
-                                        {
-                                          "statusCode": 400,
-                                          "message": "ID token is missing.",
-                                          "success": false,
-                                          "data": null
-                                        }
-                                        """))),
-                @ApiResponse(
-                        responseCode = "401",
-                        description = "Invalid Google ID token or authentication failed",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Invalid ID Token",
-                                                        value =
-                                                                """
-                                        {
-                                          "statusCode": 401,
-                                          "message": "Invalid Google ID token: Token validation failed",
-                                          "success": false,
-                                          "data": null
-                                        }
-                                        """))),
-                @ApiResponse(responseCode = "500", description = "Internal server error")
-            })
-    @PostMapping("/google-login")
-    public ResponseEntity<APIResponse<AuthResponse>> loginWithGoogle(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                            description = "Google OAuth ID token",
-                            content =
-                                    @Content(
-                                            examples =
-                                                    @ExampleObject(
-                                                            name = "Google ID Token Example",
+	@Operation(summary = "Login with Google OAuth token")
+	@PostMapping("/google-login")
+	public ResponseEntity<APIResponse<AuthResponse>> loginWithGoogle(
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Google OAuth ID token", content = @Content(examples = @ExampleObject(name = "Google ID Token Example",
                                                             value =
                                                                     """
                                         {
@@ -183,100 +97,12 @@ public class SocialAuthController {
                     .body(APIResponse.error(
                             HttpStatus.INTERNAL_SERVER_ERROR.value(), "Unexpected error during Google login.", null));
         }
-    }
+	}
 
-    @Operation(
-            summary = "GitHub OAuth Login",
-            description =
-                    """
-                        Authenticate user using GitHub OAuth authorization code.
-
-                        **How it works:**
-                        1. Client obtains authorization code from GitHub OAuth flow
-                        2. Sends authorization code to this endpoint
-                        3. Server exchanges code for GitHub access token
-                        4. Fetches user data from GitHub
-                        5. Creates or updates user account
-                        6. Returns JWT tokens for API access
-
-                        **For Swagger Testing:**
-                        1. Use this endpoint with a valid GitHub authorization code
-                        2. Copy the `accessToken` from the response
-                        3. Click the 🔒 **Authorize** button at the top
-                        4. Enter: `Bearer <your-access-token>`
-                        """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "GitHub login successful",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "GitHub Login Success",
-                                                        value =
-                                                                """
-                                        {
-                                          "statusCode": 200,
-                                          "message": "GitHub login successful",
-                                          "success": true,
-                                          "data": {
-                                            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-                                            "tokenType": "Bearer",
-                                            "expiresIn": 900
-                                          }
-                                        }
-                                        """))),
-                @ApiResponse(
-                        responseCode = "400",
-                        description = "GitHub authorization code is missing or invalid",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Missing Authorization Code",
-                                                        value =
-                                                                """
-                                        {
-                                          "statusCode": 400,
-                                          "message": "GitHub authorization code is missing",
-                                          "success": false,
-                                          "data": null
-                                        }
-                                        """))),
-                @ApiResponse(
-                        responseCode = "401",
-                        description = "GitHub authentication failed",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "GitHub Auth Failed",
-                                                        value =
-                                                                """
-                                        {
-                                          "statusCode": 401,
-                                          "message": "GitHub login failed: Invalid authorization code",
-                                          "success": false,
-                                          "data": null
-                                        }
-                                        """))),
-                @ApiResponse(responseCode = "500", description = "Internal server error")
-            })
-    @PostMapping("/github-login")
-    public ResponseEntity<APIResponse<AuthResponse>> loginWithGithub(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                            description = "GitHub OAuth authorization code",
-                            content =
-                                    @Content(
-                                            examples =
-                                                    @ExampleObject(
-                                                            name = "GitHub Authorization Code Example",
-                                                            value =
+	@Operation(summary = "Login with GitHub OAuth code")
+	@PostMapping("/github-login")
+	public ResponseEntity<APIResponse<AuthResponse>> loginWithGithub(
+			@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "GitHub OAuth authorization code", content = @Content(examples = @ExampleObject(name = "GitHub Authorization Code Example", value =
                                                                     """
                                         {
                                           "code": "abc123def456ghi789"
