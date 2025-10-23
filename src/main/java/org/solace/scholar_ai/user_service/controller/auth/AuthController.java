@@ -34,32 +34,31 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Authentication controller - handles signup, login, logout, etc.
+ */
 @RestController
 @RequestMapping("api/v1/auth")
 @Tag(
-        name = "Authentication",
-        description = "Authentication endpoints for user registration, login, and token management")
+		name = "Authentication",
+		description = "User registration, login, and token management")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
-    private final AuthService authService;
+	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+	private final AuthService authService;
 
-    @Operation(
-            summary = "User Registration",
-            description =
-                    """
-                        Register a new user account with email and password.
-
-                        **For Swagger Testing:**
-                        1. Use this endpoint to create a new account
-                        2. Then use the login endpoint to get your JWT tokens
-                        """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "201",
-                        description = "User registered successfully",
+	/**
+	 * Register a new user account.
+	 */
+	@Operation(
+			summary = "User Registration",
+			description = "Create a new account with email and password")
+	@ApiResponses(
+			value = {
+				@ApiResponse(
+						responseCode = "201",
+						description = "User registered successfully",
                         content =
                                 @Content(
                                         mediaType = "application/json",
