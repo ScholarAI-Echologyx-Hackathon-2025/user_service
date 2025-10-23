@@ -41,88 +41,10 @@ public class UserProfileController {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @SecurityRequirement(name = "jwtAuth")
-    @Operation(
-            summary = "Get User Profile",
-            description =
-                    """
-            Retrieve the current user's profile information.
-
-            **Returns:**
-            - User profile details including name, bio, avatar, etc.
-            - Profile is fetched based on the authenticated user's email
-            """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "Profile fetched successfully",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "User Profile",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 200,
-                      "message": "Profile fetched successfully",
-                      "success": true,
-                      "data": {
-                        "id": "123e4567-e89b-12d3-a456-426614174000",
-                        "userId": "123e4567-e89b-12d3-a456-426614174001",
-                        "fullName": "John Doe",
-                        "bio": "Software Engineer passionate about AI",
-                        "avatarUrl": "https://example.com/avatar.jpg",
-                        "dateOfBirth": "1990-01-01T00:00:00Z",
-                        "affiliation": "Tech Company",
-                        "positionTitle": "Senior Engineer",
-                        "researchInterests": "AI, Machine Learning",
-                        "createdAt": "2024-01-01T00:00:00Z",
-                        "updatedAt": "2024-01-01T00:00:00Z"
-                      }
-                    }
-                    """))),
-                @ApiResponse(
-                        responseCode = "401",
-                        description = "Unauthorized - invalid or missing token",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Unauthorized",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 401,
-                      "message": "Unauthorized",
-                      "success": false,
-                      "data": null
-                    }
-                    """))),
-                @ApiResponse(
-                        responseCode = "404",
-                        description = "Profile not found",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Profile Not Found",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 404,
-                      "message": "Profile not found for user",
-                      "success": false,
-                      "data": null
-                    }
-                    """)))
-            })
-    @GetMapping
-    public ResponseEntity<APIResponse<UserProfileResponseDTO>> getProfile(Principal principal) {
+	@SecurityRequirement(name = "jwtAuth")
+	@Operation(summary = "Get user profile")
+	@GetMapping
+	public ResponseEntity<APIResponse<UserProfileResponseDTO>> getProfile(Principal principal) {
         try {
             String email = principal.getName();
             logger.info("Get profile endpoint hit with email: {}", email);
@@ -135,97 +57,13 @@ public class UserProfileController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(APIResponse.error(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
         }
-    }
+	}
 
-    @SecurityRequirement(name = "jwtAuth")
-    @Operation(
-            summary = "Update User Profile",
-            description =
-                    """
-            Update the current user's profile information.
-
-            **Allowed fields:**
-            - fullName, bio, dateOfBirth, affiliation, positionTitle, researchInterests, etc.
-
-            **Note:** Only the provided fields will be updated, others remain unchanged.
-            """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "Profile updated successfully",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Profile Updated",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 200,
-                      "message": "Profile updated successfully",
-                      "success": true,
-                      "data": {
-                        "id": "123e4567-e89b-12d3-a456-426614174000",
-                        "userId": "123e4567-e89b-12d3-a456-426614174001",
-                        "fullName": "John Smith",
-                        "bio": "Updated bio information",
-                        "avatarUrl": "https://example.com/avatar.jpg",
-                        "dateOfBirth": "1990-01-01T00:00:00Z",
-                        "affiliation": "New Company",
-                        "positionTitle": "Lead Engineer",
-                        "researchInterests": "AI, ML, Deep Learning",
-                        "createdAt": "2024-01-01T00:00:00Z",
-                        "updatedAt": "2024-01-02T00:00:00Z"
-                      }
-                    }
-                    """))),
-                @ApiResponse(
-                        responseCode = "400",
-                        description = "Invalid profile data or validation failed",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Validation Error",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 400,
-                      "message": "Invalid date format for dateOfBirth",
-                      "success": false,
-                      "data": null
-                    }
-                    """))),
-                @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing token"),
-                @ApiResponse(responseCode = "404", description = "User not found")
-            })
-    @PatchMapping
-    public ResponseEntity<APIResponse<UserProfileResponseDTO>> updateProfile(
-            Principal principal,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                            description = "Profile update data",
-                            content =
-                                    @Content(
-                                            examples =
-                                                    @ExampleObject(
-                                                            name = "Profile Update Example",
-                                                            value =
-                                                                    """
-                    {
-                      "fullName": "John Smith",
-                      "bio": "Updated bio information",
-                      "dateOfBirth": "1990-01-01T00:00:00Z",
-                      "affiliation": "New Company",
-                      "positionTitle": "Lead Engineer",
-                      "researchInterests": "AI, ML, Deep Learning"
-                    }
-                    """)))
-                    @Valid
-                    @RequestBody
-                    UserProfileDTO userProfileDTO) {
+	@SecurityRequirement(name = "jwtAuth")
+	@Operation(summary = "Update user profile")
+	@PatchMapping
+	public ResponseEntity<APIResponse<UserProfileResponseDTO>> updateProfile(
+			Principal principal, @Valid @RequestBody UserProfileDTO userProfileDTO) {
         try {
             String email = principal.getName();
             logger.info("Update profile endpoint hit with email: {}", email);
@@ -243,72 +81,15 @@ public class UserProfileController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         }
-    }
+	}
 
-    @SecurityRequirement(name = "jwtAuth")
-    @Operation(
-            summary = "Upload Avatar",
-            description =
-                    """
-            Upload a new avatar image for the current user.
-
-            **File requirements:**
-            - Supported formats: JPG, PNG, GIF
-            - Maximum size: 5MB
-            - Recommended dimensions: 200x200 pixels or larger
-
-            **Note:** This is a placeholder implementation. In production, files are uploaded to cloud storage.
-            """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "Avatar uploaded successfully",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Avatar Upload Success",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 200,
-                      "message": "Avatar uploaded successfully",
-                      "success": true,
-                      "data": {
-                        "avatarUrl": "https://placeholder.com/avatar/123e4567-e89b-12d3-a456-426614174000.jpg"
-                      }
-                    }
-                    """))),
-                @ApiResponse(
-                        responseCode = "400",
-                        description = "Invalid file or upload failed",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Upload Error",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 400,
-                      "message": "File is empty or invalid format",
-                      "success": false,
-                      "data": null
-                    }
-                    """))),
-                @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing token"),
-                @ApiResponse(responseCode = "404", description = "User not found")
-            })
-    @PostMapping("/avatar")
-    public ResponseEntity<APIResponse<Map<String, String>>> uploadAvatar(
-            Principal principal,
-            @Parameter(description = "Avatar image file (JPG, PNG, GIF, max 5MB)", example = "avatar.jpg")
-                    @RequestParam("avatar")
-                    MultipartFile file)
-            throws IOException {
+	@SecurityRequirement(name = "jwtAuth")
+	@Operation(summary = "Upload avatar image")
+	@PostMapping("/avatar")
+	public ResponseEntity<APIResponse<Map<String, String>>> uploadAvatar(
+			Principal principal,
+			@Parameter(description = "Avatar image file") @RequestParam("avatar") MultipartFile file)
+			throws IOException {
         try {
             String email = principal.getName();
             logger.info("Upload avatar endpoint hit with email: {}", email);
@@ -328,63 +109,12 @@ public class UserProfileController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         }
-    }
+	}
 
-    @SecurityRequirement(name = "jwtAuth")
-    @Operation(
-            summary = "Delete Avatar",
-            description =
-                    """
-            Remove the current user's avatar image.
-
-            **What happens:**
-            1. Removes the avatar URL from the user's profile
-            2. The avatar image file is marked for deletion (in production)
-            3. Profile is updated to reflect the change
-            """)
-    @ApiResponses(
-            value = {
-                @ApiResponse(
-                        responseCode = "200",
-                        description = "Avatar deleted successfully",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Avatar Deleted",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 200,
-                      "message": "Avatar deleted successfully",
-                      "success": true,
-                      "data": null
-                    }
-                    """))),
-                @ApiResponse(
-                        responseCode = "400",
-                        description = "Deletion failed",
-                        content =
-                                @Content(
-                                        mediaType = "application/json",
-                                        examples =
-                                                @ExampleObject(
-                                                        name = "Deletion Error",
-                                                        value =
-                                                                """
-                    {
-                      "statusCode": 400,
-                      "message": "Failed to delete avatar",
-                      "success": false,
-                      "data": null
-                    }
-                    """))),
-                @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing token"),
-                @ApiResponse(responseCode = "404", description = "User not found")
-            })
-    @DeleteMapping("/avatar")
-    public ResponseEntity<APIResponse<String>> deleteAvatar(Principal principal) {
+	@SecurityRequirement(name = "jwtAuth")
+	@Operation(summary = "Delete avatar image")
+	@DeleteMapping("/avatar")
+	public ResponseEntity<APIResponse<String>> deleteAvatar(Principal principal) {
         try {
             String email = principal.getName();
             logger.info("Delete avatar endpoint hit with email: {}", email);
