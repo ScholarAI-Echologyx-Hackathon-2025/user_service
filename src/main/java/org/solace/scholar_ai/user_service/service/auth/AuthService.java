@@ -43,10 +43,10 @@ public class AuthService {
         UserDetails userDetails = userLoadingService.loadUserByUsername(email);
 
         if (userDetails == null) {
-            throw new BadCredentialsException("Invalid email ...");
+            throw new BadCredentialsException("Invalid credentials");
         }
         if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            throw new BadCredentialsException("Invalid Password");
+            throw new BadCredentialsException("Invalid credentials");
         }
 
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

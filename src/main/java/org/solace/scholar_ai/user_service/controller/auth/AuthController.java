@@ -26,6 +26,7 @@ import org.solace.scholar_ai.user_service.dto.auth.RefreshTokenRequest;
 import org.solace.scholar_ai.user_service.dto.auth.ResendEmailConfirmationDTO;
 import org.solace.scholar_ai.user_service.dto.auth.SignupDTO;
 import org.solace.scholar_ai.user_service.dto.response.APIResponse;
+import org.solace.scholar_ai.user_service.security.LoginAttemptService;
 import org.solace.scholar_ai.user_service.service.auth.AuthService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -47,6 +48,7 @@ public class AuthController {
 
 	private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 	private final AuthService authService;
+	private final LoginAttemptService loginAttemptService;
 
 	/**
 	 * Register a new user account.
@@ -211,34 +213,45 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response) {
         try {
-            logger.info("login endpoint hit with request: {}", request.getRemoteAddr());
+            String clientIp = getClientIp(request);
+            String email = loginDTO.getEmail();
+            
+            if (loginAttemptService.isBlocked(email)) {
+                long remainingTime = loginAttemptService.getRemainingLockoutTime(email);
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(APIResponse.error(
+                                HttpStatus.TOO_MANY_REQUESTS.value(),
+                                "Account temporarily locked. Try again in " + remainingTime + " seconds",
+                                null));
+            }
 
-            AuthResponse authResponse = authService.loginUser(loginDTO.getEmail(), loginDTO.getPassword());
+            logger.info("Login attempt from {} for email: {}", clientIp, email);
 
-            logger.info("got auth response from authService for login request");
+            AuthResponse authResponse = authService.loginUser(email, loginDTO.getPassword());
+            loginAttemptService.loginSucceeded(email);
 
-            // Create secure HttpOnly cookie for refresh token using ResponseCookie
+            logger.info("Login successful for: {}", email);
+
             ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
-                    .httpOnly(false) // Allow JavaScript access for debugging
-                    .secure(false) // Allow over plain HTTP for development
-                    .sameSite("None") // Important: cross-origin cookie
-                    .path("/") // Send for all paths
+                    .httpOnly(false)
+                    .secure(false)
+                    .sameSite("None")
+                    .path("/")
                     .maxAge(Duration.ofDays(7))
                     .build();
 
             response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-            // Note: Refresh token is stored securely in HttpOnly cookie
-            // For development/testing, you can keep it in response by commenting the next
-            // line
-            // authResponse.setRefreshToken(null);
-
-            logger.info("response cookie added, authResponse: {}", authResponse);
+            logger.info("Login successful, cookie set");
             return ResponseEntity.ok(APIResponse.success(HttpStatus.OK.value(), "Login successful", authResponse));
 
         } catch (BadCredentialsException e) {
+            loginAttemptService.loginFailed(loginDTO.getEmail());
+            int attempts = loginAttemptService.getAttempts(loginDTO.getEmail());
+            logger.warn("Failed login attempt {} for: {}", attempts, loginDTO.getEmail());
+            
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(APIResponse.error(HttpStatus.UNAUTHORIZED.value(), "Invalid email or password", null));
+                    .body(APIResponse.error(HttpStatus.UNAUTHORIZED.value(), "Invalid credentials", null));
         } catch (Exception e) {
             logger.error("Login error: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -904,5 +917,13 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         }
+    }
+    
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
