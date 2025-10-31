@@ -8,8 +8,11 @@ import lombok.Data;
 @Data
 @Builder
 public class APIResponse<T> {
+    
+    private static final String TIMESTAMP_PATTERN = "dd-MM-yyyy HH:mm:ss";
+    
     @Builder.Default
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TIMESTAMP_PATTERN)
     private LocalDateTime timestamp = LocalDateTime.now();
 
     private int status;
