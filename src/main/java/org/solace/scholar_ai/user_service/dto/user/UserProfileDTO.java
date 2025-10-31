@@ -12,16 +12,20 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UserProfileDTO {
 
+    private static final String URL_REGEX = "^(https?://.*)?$";
+    private static final String PHONE_REGEX = "^[+]?[0-9\\s\\-\\(\\)]{0,20}$";
+    private static final String ORCID_REGEX = "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$";
+
     @Size(max = 255, message = "Full name must not exceed 255 characters")
     private String fullName;
 
     @Size(max = 500, message = "Avatar URL must not exceed 500 characters")
-    @Pattern(regexp = "^(https?://.*)?$", message = "Avatar URL must be a valid HTTP/HTTPS URL")
+    @Pattern(regexp = URL_REGEX, message = "Avatar URL must be a valid HTTP/HTTPS URL")
     private String avatarUrl;
 
     @Size(max = 20, message = "Phone number must not exceed 20 characters")
     @Pattern(
-            regexp = "^[+]?[0-9\\s\\-\\(\\)]{0,20}$",
+            regexp = PHONE_REGEX,
             message = "Phone number must contain only digits, spaces, hyphens, parentheses, and optionally a plus sign")
     private String phoneNumber;
 
@@ -40,24 +44,24 @@ public class UserProfileDTO {
     private String researchInterests;
 
     @Size(max = 500, message = "Google Scholar URL must not exceed 500 characters")
-    @Pattern(regexp = "^(https?://.*)?$", message = "Google Scholar URL must be a valid HTTP/HTTPS URL")
+    @Pattern(regexp = URL_REGEX, message = "Google Scholar URL must be a valid HTTP/HTTPS URL")
     private String googleScholarUrl;
 
     @Size(max = 500, message = "Personal website URL must not exceed 500 characters")
-    @Pattern(regexp = "^(https?://.*)?$", message = "Personal website URL must be a valid HTTP/HTTPS URL")
+    @Pattern(regexp = URL_REGEX, message = "Personal website URL must be a valid HTTP/HTTPS URL")
     private String personalWebsiteUrl;
 
     @Size(max = 50, message = "ORCID ID must not exceed 50 characters")
     @Pattern(
-            regexp = "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}$",
+            regexp = ORCID_REGEX,
             message = "ORCID ID must be in format XXXX-XXXX-XXXX-XXXX")
     private String orcidId;
 
     @Size(max = 500, message = "LinkedIn URL must not exceed 500 characters")
-    @Pattern(regexp = "^(https?://.*)?$", message = "LinkedIn URL must be a valid HTTP/HTTPS URL")
+    @Pattern(regexp = URL_REGEX, message = "LinkedIn URL must be a valid HTTP/HTTPS URL")
     private String linkedInUrl;
 
     @Size(max = 500, message = "Twitter URL must not exceed 500 characters")
-    @Pattern(regexp = "^(https?://.*)?$", message = "Twitter URL must be a valid HTTP/HTTPS URL")
+    @Pattern(regexp = URL_REGEX, message = "Twitter URL must be a valid HTTP/HTTPS URL")
     private String twitterUrl;
 }
