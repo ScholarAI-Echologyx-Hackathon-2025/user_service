@@ -29,6 +29,12 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 public class AvatarController {
 
+    private static final String SECURE_URL_KEY = "secure_url";
+    private static final String PUBLIC_ID_KEY = "public_id";
+    private static final String USER_NOT_FOUND_MSG = "User not found with email: ";
+    private static final String AVATAR_UPLOAD_SUCCESS = "Avatar uploaded successfully";
+    private static final String AVATAR_DELETE_SUCCESS = "Avatar deleted successfully";
+
     private final AvatarService avatarService;
     private final UserRepository userRepository;
 
@@ -47,26 +53,35 @@ public class AvatarController {
     public ResponseEntity<APIResponse<AvatarUploadResponse>> upload(
             Principal principal, @RequestPart("file") MultipartFile file) {
         try {
-            String email = principal.getName();
-            User user = userRepository
-                    .findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+            User user = getUserByPrincipal(principal);
+            AvatarUploadResponse response = uploadAvatar(user, file);
 
-            byte[] bytes = file.getBytes();
-            Map<String, Object> uploadResult = avatarService.uploadToCloudinary(
-                    user.getId(), file.getOriginalFilename(), file.getContentType(), bytes);
-            String secureUrl = (String) uploadResult.get("secure_url");
-            String publicId = (String) uploadResult.get("public_id");
-
-            avatarService.setAvatarFromCloudinary(user.getId(), publicId, secureUrl);
-
-            return ResponseEntity.ok(APIResponse.success(
-                    200, "Avatar uploaded successfully", new AvatarUploadResponse(secureUrl, publicId)));
+            return ResponseEntity.ok(APIResponse.success(200, AVATAR_UPLOAD_SUCCESS, response));
         } catch (Exception e) {
             log.error("Error uploading avatar: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         }
+    }
+    
+    private User getUserByPrincipal(Principal principal) {
+        String email = principal.getName();
+        return userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG + email));
+    }
+    
+    private AvatarUploadResponse uploadAvatar(User user, MultipartFile file) throws Exception {
+        byte[] bytes = file.getBytes();
+        Map<String, Object> uploadResult = avatarService.uploadToCloudinary(
+                user.getId(), file.getOriginalFilename(), file.getContentType(), bytes);
+        
+        String secureUrl = (String) uploadResult.get(SECURE_URL_KEY);
+        String publicId = (String) uploadResult.get(PUBLIC_ID_KEY);
+
+        avatarService.setAvatarFromCloudinary(user.getId(), publicId, secureUrl);
+        
+        return new AvatarUploadResponse(secureUrl, publicId);
     }
 
     @SecurityRequirement(name = "jwtAuth")
@@ -80,17 +95,13 @@ public class AvatarController {
     @DeleteMapping
     public ResponseEntity<APIResponse<String>> deleteAvatar(Principal principal) {
         try {
-            String email = principal.getName();
-            log.info("Delete avatar request for user: {}", email);
-
-            User user = userRepository
-                    .findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+            User user = getUserByPrincipal(principal);
+            log.info("Delete avatar request for user: {}", user.getEmail());
 
             avatarService.deleteCurrentAvatar(user.getId());
 
             return ResponseEntity.status(HttpStatus.NO_CONTENT)
-                    .body(APIResponse.success(HttpStatus.NO_CONTENT.value(), "Avatar deleted successfully", null));
+                    .body(APIResponse.success(HttpStatus.NO_CONTENT.value(), AVATAR_DELETE_SUCCESS, null));
         } catch (Exception e) {
             log.error("Error deleting avatar: {}", e.getMessage(), e);
             return ResponseEntity.badRequest()
