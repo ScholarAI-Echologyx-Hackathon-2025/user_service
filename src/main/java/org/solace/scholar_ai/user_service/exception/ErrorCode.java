@@ -2,10 +2,6 @@ package org.solace.scholar_ai.user_service.exception;
 
 import lombok.Getter;
 
-/**
- * Enumeration of error codes used across the application.
- * Each error code includes a user-friendly suggestion for resolution.
- */
 @Getter
 public enum ErrorCode {
     // Client Validation Errors

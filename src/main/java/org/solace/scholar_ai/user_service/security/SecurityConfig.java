@@ -18,10 +18,6 @@ import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * Main security configuration.
- * Handles JWT authentication, public endpoints, and CORS.
- */
 @RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity

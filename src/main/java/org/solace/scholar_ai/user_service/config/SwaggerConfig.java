@@ -13,27 +13,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Simple configuration for Swagger API documentation with JWT authentication support.
- * This configuration provides a single unified API documentation with JWT Bearer token authentication.
- */
 @Configuration
 public class SwaggerConfig {
 
-    /**
-     * JWT Bearer security scheme name.
-     */
     private static final String JWT_BEARER_SCHEME = "jwtAuth";
 
     @Value("${server.port:8081}")
     private String serverPort;
 
-    /**
-     * Creates the main OpenAPI configuration with security schemes and global settings.
-     * This includes JWT Bearer token authentication for the entire API.
-     *
-     * @return OpenAPI configuration with JWT security scheme
-     */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
