@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LoginAttemptService {
 
+	private static final int DEFAULT_MAX_ATTEMPTS = 5;
+	private static final int DEFAULT_LOCKOUT_DURATION_MINUTES = 15;
+	private static final int SECONDS_PER_MINUTE = 60;
+	private static final int MILLIS_PER_SECOND = 1000;
+
 	@Value("${security.login.max-attempts:5}")
 	private int maxAttempts;
 
@@ -26,15 +31,20 @@ public class LoginAttemptService {
 	}
 
 	public void loginFailed(String key) {
-		int attempts = attemptsCache.getOrDefault(key, 0);
-		attempts++;
+		int attempts = attemptsCache.getOrDefault(key, 0) + 1;
 		attemptsCache.put(key, attempts);
 
 		if (attempts >= maxAttempts) {
-			long lockoutUntil = Instant.now().plusSeconds(lockoutDurationMinutes * 60).toEpochMilli();
-			lockoutCache.put(key, lockoutUntil);
-			log.warn("Account locked due to {} failed login attempts: {}", attempts, key);
+			lockAccount(key, attempts);
 		}
+	}
+	
+	private void lockAccount(String key, int attempts) {
+		long lockoutUntil = Instant.now()
+				.plusSeconds((long) lockoutDurationMinutes * SECONDS_PER_MINUTE)
+				.toEpochMilli();
+		lockoutCache.put(key, lockoutUntil);
+		log.warn("Account locked due to {} failed login attempts: {}", attempts, key);
 	}
 
 	public boolean isBlocked(String key) {
@@ -62,6 +72,6 @@ public class LoginAttemptService {
 			return 0;
 		}
 		long remaining = lockoutUntil - Instant.now().toEpochMilli();
-		return Math.max(0, remaining / 1000);
+		return Math.max(0, remaining / MILLIS_PER_SECOND);
 	}
 }
