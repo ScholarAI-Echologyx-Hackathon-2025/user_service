@@ -14,6 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/health")
 public class HealthController {
     private static final Logger logger = LoggerFactory.getLogger(HealthController.class);
+    private static final String TEST_KEY = "health_check_test";
+    private static final String TEST_VALUE = "test_value";
+    private static final String STATUS_KEY = "status";
+    private static final String MESSAGE_KEY = "message";
+    private static final String TIMESTAMP_KEY = "timestamp";
+    private static final String STATUS_UP = "UP";
+    private static final String STATUS_DOWN = "DOWN";
+    
     private final RedisTemplate<String, String> redisTemplate;
 
     public HealthController(RedisTemplate<String, String> redisTemplate) {
@@ -22,36 +30,33 @@ public class HealthController {
 
     @GetMapping("/redis")
     public ResponseEntity<Map<String, Object>> checkRedisHealth() {
-        Map<String, Object> response = new HashMap<>();
-
         try {
-            // Test Redis connection by performing a simple operation
-            String testKey = "health_check_test";
-            String testValue = "test_value";
-
-            redisTemplate.opsForValue().set(testKey, testValue);
-            String retrievedValue = redisTemplate.opsForValue().get(testKey);
-            redisTemplate.delete(testKey);
-
-            if (testValue.equals(retrievedValue)) {
-                response.put("status", "UP");
-                response.put("message", "Redis is healthy and responding");
-                response.put("timestamp", System.currentTimeMillis());
-                logger.info("Redis health check passed");
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("status", "DOWN");
-                response.put("message", "Redis is not responding correctly");
-                response.put("timestamp", System.currentTimeMillis());
-                logger.error("Redis health check failed - value mismatch");
-                return ResponseEntity.status(503).body(response);
-            }
+            validateRedisConnection();
+            logger.info("Redis health check passed");
+            return ResponseEntity.ok(buildHealthResponse(STATUS_UP, "Redis is healthy and responding"));
         } catch (Exception e) {
-            response.put("status", "DOWN");
-            response.put("message", "Redis connection failed: " + e.getMessage());
-            response.put("timestamp", System.currentTimeMillis());
             logger.error("Redis health check failed", e);
-            return ResponseEntity.status(503).body(response);
+            return ResponseEntity
+                    .status(503)
+                    .body(buildHealthResponse(STATUS_DOWN, "Redis connection failed: " + e.getMessage()));
         }
+    }
+    
+    private void validateRedisConnection() {
+        redisTemplate.opsForValue().set(TEST_KEY, TEST_VALUE);
+        String retrievedValue = redisTemplate.opsForValue().get(TEST_KEY);
+        redisTemplate.delete(TEST_KEY);
+
+        if (!TEST_VALUE.equals(retrievedValue)) {
+            throw new IllegalStateException("Value mismatch - Redis not responding correctly");
+        }
+    }
+    
+    private Map<String, Object> buildHealthResponse(String status, String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(STATUS_KEY, status);
+        response.put(MESSAGE_KEY, message);
+        response.put(TIMESTAMP_KEY, System.currentTimeMillis());
+        return response;
     }
 }
