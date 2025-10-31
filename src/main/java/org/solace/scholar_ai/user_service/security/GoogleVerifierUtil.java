@@ -6,18 +6,21 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import jakarta.annotation.PostConstruct;
 import java.util.Collections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GoogleVerifierUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(GoogleVerifierUtil.class);
+
     @Value("${spring.google.client-id}")
     private String clientId;
 
     private GoogleIdTokenVerifier verifier;
 
-    // Added for testability
     public GoogleVerifierUtil(GoogleIdTokenVerifier verifier) {
         this.verifier = verifier;
     }
@@ -28,19 +31,25 @@ public class GoogleVerifierUtil {
 
     @PostConstruct
     public void init() throws Exception {
-        if (this.verifier == null) {
-            this.verifier = new GoogleIdTokenVerifier.Builder(
-                            GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance())
-                    .setAudience(Collections.singletonList(clientId))
-                    .build();
+        if (verifier == null) {
+            verifier = buildGoogleVerifier();
         }
+    }
+    
+    private GoogleIdTokenVerifier buildGoogleVerifier() throws Exception {
+        return new GoogleIdTokenVerifier.Builder(
+                        GoogleNetHttpTransport.newTrustedTransport(), 
+                        JacksonFactory.getDefaultInstance())
+                .setAudience(Collections.singletonList(clientId))
+                .build();
     }
 
     public GoogleIdToken.Payload verify(String idTokenString) {
         try {
             GoogleIdToken idToken = verifier.verify(idTokenString);
-            return (idToken != null) ? idToken.getPayload() : null;
+            return idToken != null ? idToken.getPayload() : null;
         } catch (Exception e) {
+            logger.error("Failed to verify Google ID token", e);
             return null;
         }
     }
