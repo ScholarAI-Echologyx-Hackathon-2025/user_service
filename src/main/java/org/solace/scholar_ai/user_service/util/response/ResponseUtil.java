@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * Utility class for creating standardized API responses.
  */
-public class ResponseUtil {
+public final class ResponseUtil {
 
     private ResponseUtil() {
         // Private constructor to prevent instantiation
@@ -29,24 +29,24 @@ public class ResponseUtil {
     }
 
     /**
-     * Creates a success response with data.
+     * Creates a success response with data and HTTP 200 status.
      */
     public static <T> ResponseEntity<ResponseWrapper<T>> success(T data) {
         return ResponseEntity.ok(ResponseWrapper.success(data));
     }
 
     /**
-     * Creates a success response with data and custom status.
+     * Creates a success response with data and custom HTTP status.
      */
     public static <T> ResponseEntity<ResponseWrapper<T>> success(T data, HttpStatus status) {
         return new ResponseEntity<>(ResponseWrapper.success(data), status);
     }
 
     /**
-     * Creates an error response.
+     * Creates an error response with the specified status and error details.
      */
     public static <T> ResponseEntity<ResponseWrapper<T>> error(HttpStatus status, ErrorCode errorCode, String message) {
-        return ResponseEntity.status(status)
-                .body(ResponseWrapper.error(createErrorResponse(status, errorCode, message)));
+        APIErrorResponse errorResponse = createErrorResponse(status, errorCode, message);
+        return ResponseEntity.status(status).body(ResponseWrapper.error(errorResponse));
     }
 }
