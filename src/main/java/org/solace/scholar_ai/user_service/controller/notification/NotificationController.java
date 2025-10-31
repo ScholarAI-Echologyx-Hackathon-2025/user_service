@@ -27,6 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationController {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationController.class);
+    private static final String USER_NOT_FOUND_ERROR = "User not found";
+    private static final String NOTIFICATION_DISPATCHED_MSG = "Notification dispatched";
+    
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
@@ -37,17 +40,28 @@ public class NotificationController {
     @PostMapping("/send")
     public ResponseEntity<APIResponse<String>> sendNotification(@RequestBody CrossServiceNotificationRequest req) {
         try {
-            User user = userRepository
-                    .findWithProfileById(req.userId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            String recipientName = user.getProfile() != null ? user.getProfile().getFullName() : user.getEmail();
+            User user = findUserById(req.userId());
+            String recipientName = determineRecipientName(user);
+            
             notificationService.sendGenericNotificationToUser(
                     req.userId(), req.notificationType(), req.templateData(), user.getEmail(), recipientName);
-            return ResponseEntity.ok(APIResponse.success(HttpStatus.OK.value(), "Notification dispatched", null));
+            
+            return ResponseEntity.ok(
+                    APIResponse.success(HttpStatus.OK.value(), NOTIFICATION_DISPATCHED_MSG, null));
         } catch (Exception e) {
             log.error("Failed to dispatch notification: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
         }
+    }
+    
+    private User findUserById(UUID userId) {
+        return userRepository
+                .findWithProfileById(userId)
+                .orElseThrow(() -> new RuntimeException(USER_NOT_FOUND_ERROR));
+    }
+    
+    private String determineRecipientName(User user) {
+        return user.getProfile() != null ? user.getProfile().getFullName() : user.getEmail();
     }
 }
