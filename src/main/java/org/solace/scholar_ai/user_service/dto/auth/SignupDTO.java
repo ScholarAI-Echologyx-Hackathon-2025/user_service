@@ -12,13 +12,16 @@ import org.solace.scholar_ai.user_service.model.UserRole;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignupDTO {
+    
+    private static final int MIN_PASSWORD_LENGTH = 8;
+    
     @NotBlank
     @Email
     private String email;
 
     @NotBlank
-    @Size(min = 8)
+    @Size(min = MIN_PASSWORD_LENGTH)
     private String password;
 
-    private UserRole role = UserRole.USER; // Default to USER role
+    private UserRole role = UserRole.USER;
 }

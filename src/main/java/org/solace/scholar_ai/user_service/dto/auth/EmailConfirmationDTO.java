@@ -14,11 +14,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmailConfirmationDTO {
 
+    private static final String OTP_PATTERN = "^\\d{6}$";
+
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
 
     @NotBlank(message = "OTP code is required")
-    @Pattern(regexp = "^\\d{6}$", message = "OTP must be a 6-digit number")
+    @Pattern(regexp = OTP_PATTERN, message = "OTP must be a 6-digit number")
     private String otp;
 }
