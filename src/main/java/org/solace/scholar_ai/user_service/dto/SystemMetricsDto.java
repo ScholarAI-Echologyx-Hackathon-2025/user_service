@@ -21,9 +21,9 @@ public class SystemMetricsDto {
         private double responseTimeChange;
         private double errorRate;
         private double errorRateChange;
-        private double networkIn; // GB/s
+        private double networkIn;
         private double networkInChange;
-        private double networkOut; // MB/s
+        private double networkOut;
         private double networkOutChange;
     }
     
@@ -31,8 +31,8 @@ public class SystemMetricsDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ResourceUsage {
-        private double cpuUsage; // percentage
-        private double memoryUsage; // percentage
-        private double diskUsage; // percentage
+        private double cpuUsage;
+        private double memoryUsage;
+        private double diskUsage;
     }
 }
