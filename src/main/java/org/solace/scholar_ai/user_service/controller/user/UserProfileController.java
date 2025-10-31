@@ -34,9 +34,16 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "User Profile", description = "User profile management endpoints for viewing and updating user information")
 @RequiredArgsConstructor
 public class UserProfileController {
-    private static final Logger logger = LoggerFactory.getLogger(UserProfileController.class);
-    private final UserProfileService userProfileService;
-    private final UserRepository userRepository;
+    
+        private static final Logger logger = LoggerFactory.getLogger(UserProfileController.class);
+        private static final String USER_NOT_FOUND_MSG = "User not found with email: ";
+        private static final String PROFILE_FETCHED_MSG = "Profile fetched successfully";
+        private static final String PROFILE_UPDATED_MSG = "Profile updated successfully";
+        private static final String AVATAR_UPLOADED_MSG = "Avatar uploaded successfully";
+        private static final String AVATAR_DELETED_MSG = "Avatar deleted successfully";
+    
+        private final UserProfileService userProfileService;
+        private final UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -51,8 +58,8 @@ public class UserProfileController {
             UserProfileResponseDTO userProfile = userProfileService.getProfileByEmail(email);
             logger.info("Fetched user profile details: {}", objectMapper.writeValueAsString(userProfile));
 
-            return ResponseEntity.ok(
-                    APIResponse.success(HttpStatus.OK.value(), "Profile fetched successfully", userProfile));
+                                return ResponseEntity.ok(
+                                                APIResponse.success(HttpStatus.OK.value(), PROFILE_FETCHED_MSG, userProfile));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(APIResponse.error(HttpStatus.NOT_FOUND.value(), e.getMessage(), null));
@@ -70,13 +77,13 @@ public class UserProfileController {
 
             User user = userRepository
                     .findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG + email));
 
             UserProfileResponseDTO updatedProfile = userProfileService.updateProfile(user.getId(), userProfileDTO);
             logger.info("Updated user profile details: {}", objectMapper.writeValueAsString(updatedProfile));
 
-            return ResponseEntity.ok(
-                    APIResponse.success(HttpStatus.OK.value(), "Profile updated successfully", updatedProfile));
+                return ResponseEntity.ok(
+                        APIResponse.success(HttpStatus.OK.value(), PROFILE_UPDATED_MSG, updatedProfile));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
@@ -96,15 +103,15 @@ public class UserProfileController {
 
             User user = userRepository
                     .findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                                        .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG + email));
 
             String avatarUrl = uploadToStorage(file);
             UserProfileResponseDTO updatedProfile = userProfileService.updateAvatarUrl(user.getId(), avatarUrl);
 
             Map<String, String> response = Map.of("avatarUrl", avatarUrl);
 
-            return ResponseEntity.ok(
-                    APIResponse.success(HttpStatus.OK.value(), "Avatar uploaded successfully", response));
+                                return ResponseEntity.ok(
+                                        APIResponse.success(HttpStatus.OK.value(), AVATAR_UPLOADED_MSG, response));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
@@ -121,11 +128,11 @@ public class UserProfileController {
 
             User user = userRepository
                     .findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+                                                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_MSG + email));
 
             userProfileService.deleteAvatarUrl(user.getId());
 
-            return ResponseEntity.ok(APIResponse.success(HttpStatus.OK.value(), "Avatar deleted successfully", null));
+                                return ResponseEntity.ok(APIResponse.success(HttpStatus.OK.value(), AVATAR_DELETED_MSG, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(APIResponse.error(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null));
